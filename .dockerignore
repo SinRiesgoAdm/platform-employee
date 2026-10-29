@@ -1,0 +1,25 @@
+# Nunca enviar al contexto de build de Docker
+node_modules
+dist
+dev-dist
+.git
+.gitignore
+.vscode
+.idea
+*.log
+coverage
+
+# Variables locales: el build usa el ARG VITE_API_URL, no tu .env
+.env
+.env.*
+!.env.example
+
+# Material que no forma parte de la app
+README.md
+claude.md
+codebook.toml
+
+# Archivos de Docker (no hacen falta dentro de la imagen)
+Dockerfile
+docker-compose*.yml
+Caddyfile

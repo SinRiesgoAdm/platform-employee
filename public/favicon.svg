@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 90 90" width="90" height="90" role="img" aria-label="sinriesgo.co">
+  <title>sinriesgo.co</title>
+  <defs>
+    <radialGradient id="sr-shade" cx="45.6" cy="34.35" r="46" gradientUnits="userSpaceOnUse">
+      <stop offset="0.93" stop-color="#FFED55"/>
+      <stop offset="0.97" stop-color="#FBD830"/>
+    </radialGradient>
+  </defs>
+  <path fill="#00C3F7" d="M30.74 7.49L40.12 4.77L45 11.36L49.88 4.77L59.26 7.49L45 27.08Z"/>
+  <path fill="url(#sr-shade)" d="M62.7 8.85L71.35 13.26L69.92 21.21L78.25 19.84L82.86 28.11L58.27 32.33ZM84.28 31.39L87.14 40.34L80.24 45L87.14 49.66L84.28 58.61L63.77 45ZM82.86 61.89L78.25 70.16L69.92 68.79L71.35 76.74L62.7 81.15L58.27 57.67ZM59.26 82.51L49.88 85.23L45 78.64L40.12 85.23L30.74 82.51L45 62.92ZM27.3 81.15L18.65 76.74L20.08 68.79L11.75 70.16L7.14 61.89L31.73 57.67ZM5.72 58.61L2.86 49.66L9.76 45L2.86 40.34L5.72 31.39L26.23 45ZM7.14 28.11L11.75 19.84L20.08 21.21L18.65 13.26L27.3 8.85L31.73 32.33Z"/>
+</svg>

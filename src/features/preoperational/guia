@@ -1,0 +1,470 @@
+import { createFileRoute, Link } from "@tanstack/react-router";
+import {
+  AlertTriangle,
+  ArrowLeft,
+  Bus,
+  CalendarDays,
+  CheckCircle2,
+  MessageSquare,
+} from "lucide-react";
+import { useMemo, useState, type FormEvent } from "react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Separator } from "@/components/ui/separator";
+import { Textarea } from "@/components/ui/textarea";
+
+export const Route = createFileRoute("/preoperacional")({
+  head: () => ({
+    meta: [
+      { title: "Preoperacional PESV | sinriesgo.co" },
+      {
+        name: "description",
+        content:
+          "Inspección preoperacional PESV: verifica llantas, luces, frenos, niveles de líquidos, documentos y equipos de prevención del vehículo.",
+      },
+      { property: "og:title", content: "Preoperacional PESV | sinriesgo.co" },
+      {
+        property: "og:description",
+        content:
+          "Registra la inspección diaria del vehículo con fecha, placa, comentarios y estado de cada punto de revisión.",
+      },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
+    ],
+  }),
+  component: PreoperacionalPage,
+});
+
+const plates = [
+  "ABC-123",
+  "DEF-456",
+  "GHI-789",
+  "JKL-012",
+  "MNO-345",
+  "PQR-678",
+];
+
+const statusOptions = ["Bueno", "Malo", "N/A"] as const;
+
+const checklist: { category: string; items: string[] }[] = [
+  {
+    category: "SISTEMA DE LUCES",
+    items: [
+      "Luz delantera alta",
+      "Luz delantera baja",
+      "Luces direccionales",
+      "Luces de freno y reversa",
+      "Luces estacionarias",
+    ],
+  },
+  {
+    category: "LLANTAS",
+    items: [
+      "Verifica la profundidad del labrado, presión, cortaduras o protuberancias",
+    ],
+  },
+  {
+    category: "LUCES",
+    items: [
+      "Verifica el funcionamiento correcto de luces altas y bajas, posición, direccionales, freno, reversa y estacionarias",
+    ],
+  },
+  { category: "BOCINA", items: ["Verifica su funcionamiento"] },
+  {
+    category: "ESPEJOS",
+    items: [
+      "Revisa y posiciona correctamente los espejos laterales y centrales",
+    ],
+  },
+  {
+    category: "NIVELES DE LIQUIDOS",
+    items: [
+      "Verifica el aceite, líquido de frenos, limpiaparabrisas, refrigerante, y dirección hidráulica (si aplica)",
+    ],
+  },
+  {
+    category: "FUGAS DE FLUIDOS",
+    items: [
+      "Verifica que no existan fugas ni humedades en el habitáculo del motor y en el piso donde parqueas",
+    ],
+  },
+  {
+    category: "ESTADO DE FRENOS",
+    items: [
+      "Verifica el estado de las pastillas y una óptima tensión del pedal y del freno de parqueo",
+    ],
+  },
+  {
+    category: "PARABRISAS",
+    items: [
+      "Verifica que no esté fisurado y el funcionamiento de las plumillas",
+    ],
+  },
+  {
+    category: "ELEMENTOS DE RETENCIÓN",
+    items: [
+      "Revisa el estado del cinturón de seguridad y el anclaje de las sillas",
+    ],
+  },
+  {
+    category: "DOCUMENTOS",
+    items: [
+      "Verifica la tarjeta de propiedad, SOAT y revisión técnico mecánica (si aplica)",
+    ],
+  },
+  {
+    category: "EQUIPOS DE PREVENCIÓN",
+    items: [
+      "Revisa la caja de herramientas, extintor, botiquín, conos, tacos, linterna, llanta de repuesto, gato, cruceta y chaleco reflectivo",
+    ],
+  },
+  {
+    category: "LUCES DE TABLERO Y TESTIGOS",
+    items: [
+      "Antes de iniciar la marcha, verifica que todos los testigos, excepto el de parqueo, estén apagados",
+    ],
+  },
+];
+
+type ItemState = { status?: string; quantity: string };
+
+function PreoperacionalPage() {
+  const today = useMemo(() => new Date().toISOString().slice(0, 10), []);
+  const todayLabel = useMemo(
+    () =>
+      new Date().toLocaleDateString("es-CO", {
+        weekday: "long",
+        day: "2-digit",
+        month: "long",
+        year: "numeric",
+      }),
+    [],
+  );
+
+  const [plate, setPlate] = useState("");
+  const [comments, setComments] = useState("");
+  const [items, setItems] = useState<Record<string, ItemState>>({});
+  const [submitAttempted, setSubmitAttempted] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+
+  const totalItems = checklist.reduce((sum, group) => sum + group.items.length, 0);
+  const answeredCount = Object.values(items).filter((item) => item.status).length;
+  const isComplete = answeredCount === totalItems && plate !== "";
+  const hasFormError = submitAttempted && !isComplete;
+  const progress = Math.round((answeredCount / totalItems) * 100);
+  const failures = Object.values(items).filter((item) => item.status === "Malo").length;
+
+  const setItem = (key: string, patch: Partial<ItemState>) =>
+    setItems((current) => ({
+      ...current,
+      [key]: { quantity: "", ...current[key], ...patch },
+    }));
+
+  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setSubmitAttempted(true);
+    setSubmitted(isComplete);
+  };
+
+  return (
+    <main className="min-h-screen bg-background pb-16 font-sans">
+      <header className="sticky top-0 z-20 border-b border-border/70 bg-background/90 backdrop-blur">
+        <div className="mx-auto grid max-w-5xl grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 px-4 py-3 sm:px-6">
+          <Button variant="ghost" size="icon" asChild aria-label="Volver al panel">
+            <Link to="/dashboard">
+              <ArrowLeft className="h-4 w-4" />
+            </Link>
+          </Button>
+          <span className="truncate font-display text-base font-semibold tracking-tight text-foreground">
+            Preoperacional PESV
+          </span>
+          <Badge variant="secondary" className="shrink-0">
+            {answeredCount}/{totalItems}
+          </Badge>
+        </div>
+      </header>
+
+      <div className="mx-auto max-w-5xl px-4 py-5 sm:px-6 sm:py-8">
+        <section
+          className="rounded-xl p-5 text-brand-foreground sm:p-7"
+          style={{ background: "var(--gradient-brand)" }}
+        >
+          <div className="flex items-start justify-between gap-4">
+            <div className="min-w-0">
+              <p className="text-[0.65rem] font-medium uppercase tracking-[0.24em] opacity-75">
+                Inspección diaria del vehículo
+              </p>
+              <h1 className="mt-2 font-display text-2xl font-semibold tracking-tight sm:text-3xl">
+                Preoperacional de vehículo
+              </h1>
+              <p className="mt-3 max-w-2xl text-sm leading-relaxed opacity-85">
+                Marca el estado de cada punto de revisión antes de iniciar la
+                marcha. Registra la cantidad cuando aplique.
+              </p>
+            </div>
+            <Bus className="hidden h-9 w-9 shrink-0 opacity-70 sm:block" />
+          </div>
+
+          <div className="mt-6" aria-label={`Progreso: ${progress}%`}>
+            <div className="mb-2 flex items-center justify-between text-xs opacity-80">
+              <span>Progreso</span>
+              <span>{progress}% verificado</span>
+            </div>
+            <div className="h-2 overflow-hidden rounded-full bg-brand-foreground/20">
+              <div
+                className="h-full rounded-full bg-brand-foreground transition-[width] duration-300"
+                style={{ width: `${progress}%` }}
+              />
+            </div>
+          </div>
+        </section>
+
+        <form onSubmit={handleSubmit} noValidate>
+          {/* Datos generales */}
+          <Card className="mt-6 border-border/70 shadow-sm">
+            <CardHeader className="p-4 pb-2 sm:p-5 sm:pb-2">
+              <CardTitle className="font-display text-base font-semibold tracking-tight">
+                Datos de la inspección
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="grid gap-4 p-4 pt-2 sm:grid-cols-2 sm:p-5 sm:pt-2">
+              <div className="grid gap-2">
+                <Label htmlFor="fecha">Fecha</Label>
+                <div className="relative">
+                  <CalendarDays className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    id="fecha"
+                    type="date"
+                    value={today}
+                    readOnly
+                    className="pl-9"
+                  />
+                </div>
+                <p className="text-xs capitalize text-muted-foreground">{todayLabel}</p>
+              </div>
+
+              <div className="grid gap-2">
+                <Label htmlFor="placa">Placa del vehículo</Label>
+                <Select value={plate} onValueChange={setPlate}>
+                  <SelectTrigger
+                    id="placa"
+                    className="w-full"
+                    aria-invalid={submitAttempted && plate === ""}
+                  >
+                    <SelectValue placeholder="Selecciona la placa" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {plates.map((item) => (
+                      <SelectItem key={item} value={item}>
+                        {item}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {submitAttempted && plate === "" ? (
+                  <p className="text-xs font-medium text-destructive">
+                    Selecciona la placa del vehículo.
+                  </p>
+                ) : (
+                  <p className="text-xs text-muted-foreground">
+                    Vehículos asignados a tu perfil.
+                  </p>
+                )}
+              </div>
+
+              <div className="grid gap-2 sm:col-span-2">
+                <Label htmlFor="comentarios">Comentarios</Label>
+                <Textarea
+                  id="comentarios"
+                  rows={3}
+                  value={comments}
+                  onChange={(event) => setComments(event.target.value)}
+                  placeholder="Describe novedades, hallazgos o requerimientos de mantenimiento."
+                />
+                <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                  <MessageSquare className="h-3.5 w-3.5" />
+                  Opcional, pero recomendado si algún punto está en mal estado.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+
+          {submitted ? (
+            <Alert className="mt-5">
+              <CheckCircle2 className="h-4 w-4" />
+              <AlertTitle>Preoperacional registrado</AlertTitle>
+              <AlertDescription>
+                Inspección de la placa {plate} enviada con {failures} punto(s) en
+                mal estado.
+              </AlertDescription>
+            </Alert>
+          ) : null}
+
+          {hasFormError ? (
+            <Alert variant="destructive" className="mt-5">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertTitle>Revisa la inspección</AlertTitle>
+              <AlertDescription>
+                Faltan datos por completar: selecciona la placa y el estado de
+                los {totalItems - answeredCount} puntos marcados.
+              </AlertDescription>
+            </Alert>
+          ) : null}
+
+          {/* Checklist */}
+          <div className="mt-7 flex items-end justify-between gap-3">
+            <div>
+              <h2 className="font-display text-lg font-semibold tracking-tight text-foreground">
+                Puntos de revisión
+              </h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Marca Bueno, Malo o N/A e indica la cantidad si aplica.
+              </p>
+            </div>
+            {failures > 0 ? (
+              <Badge variant="destructive" className="shrink-0">
+                {failures} en mal estado
+              </Badge>
+            ) : null}
+          </div>
+          <Separator className="mt-4" />
+
+          <div className="mt-4 grid gap-4">
+            {checklist.map((group, groupIndex) => (
+              <Card key={group.category} className="border-border/70 shadow-sm">
+                <CardHeader className="p-4 pb-2 sm:p-5 sm:pb-2">
+                  <div className="flex items-center gap-3">
+                    <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-primary/10 text-xs font-semibold text-primary">
+                      {groupIndex + 1}
+                    </span>
+                    <CardTitle className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                      {group.category}
+                    </CardTitle>
+                  </div>
+                </CardHeader>
+                <CardContent className="grid gap-3 p-4 pt-1 sm:p-5 sm:pt-2">
+                  {group.items.map((item, itemIndex) => {
+                    const key = `${groupIndex}-${itemIndex}`;
+                    const state = items[key];
+                    const itemHasError = hasFormError && !state?.status;
+                    return (
+                      <div
+                        key={item}
+                        className={`rounded-lg border p-3 sm:p-4 ${
+                          itemHasError ? "border-destructive/60" : "border-border/70"
+                        }`}
+                      >
+                        <p className="text-sm font-medium leading-relaxed text-foreground">
+                          {item}
+                        </p>
+                        <div className="mt-3 grid gap-2 sm:grid-cols-[minmax(0,1fr)_9rem]">
+                          <div
+                            className="grid grid-cols-3 gap-2"
+                            role="radiogroup"
+                            aria-label={`Estado de: ${item}`}
+                            aria-invalid={itemHasError}
+                          >
+                            {statusOptions.map((option) => {
+                              const isSelected = state?.status === option;
+                              return (
+                                <Button
+                                  key={option}
+                                  type="button"
+                                  role="radio"
+                                  aria-checked={isSelected}
+                                  variant={
+                                    isSelected
+                                      ? option === "Malo"
+                                        ? "destructive"
+                                        : "default"
+                                      : "outline"
+                                  }
+                                  onClick={() => setItem(key, { status: option })}
+                                  className="h-auto min-h-10 whitespace-normal px-2 py-2 text-xs sm:text-sm"
+                                >
+                                  {isSelected ? (
+                                    <CheckCircle2 className="h-3.5 w-3.5" />
+                                  ) : null}
+                                  {option}
+                                </Button>
+                              );
+                            })}
+                          </div>
+                          <div className="grid gap-1.5">
+                            <Label
+                              htmlFor={`cantidad-${key}`}
+                              className="text-xs text-muted-foreground"
+                            >
+                              Cantidad
+                            </Label>
+                            <Input
+                              id={`cantidad-${key}`}
+                              inputMode="numeric"
+                              placeholder="0"
+                              value={state?.quantity ?? ""}
+                              onChange={(event) =>
+                                setItem(key, {
+                                  quantity: event.target.value.replace(/\D/g, ""),
+                                })
+                              }
+                            />
+                          </div>
+                        </div>
+                        {itemHasError ? (
+                          <p className="mt-2 text-xs font-medium text-destructive">
+                            Selecciona el estado de este punto.
+                          </p>
+                        ) : null}
+                      </div>
+                    );
+                  })}
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+
+          <div className="mt-6 flex flex-col gap-3 rounded-xl border border-border/70 bg-card p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between sm:p-5">
+            <div className="flex items-start gap-3">
+              <CheckCircle2
+                className={`mt-0.5 h-5 w-5 shrink-0 ${
+                  isComplete ? "text-primary" : "text-muted-foreground"
+                }`}
+              />
+              <div>
+                <p className="text-sm font-semibold text-foreground">
+                  {isComplete
+                    ? "Inspección completa"
+                    : "Aún tienes puntos pendientes"}
+                </p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {isComplete
+                    ? "Revisa los comentarios antes de enviar."
+                    : `Te faltan ${totalItems - answeredCount} puntos por verificar.`}
+                </p>
+              </div>
+            </div>
+            <Button type="submit" className="w-full shrink-0 sm:w-auto">
+              Enviar preoperacional
+            </Button>
+          </div>
+        </form>
+      </div>
+    </main>
+  );
+}

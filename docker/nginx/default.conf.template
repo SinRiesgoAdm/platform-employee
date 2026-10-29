@@ -1,0 +1,120 @@
+# =====================================================================
+#  nginx · platform-employee
+#  Esta plantilla se procesa con envsubst al arrancar el contenedor.
+#  Solo se reemplazan variables DEFINIDAS en el entorno (BACKEND_UPSTREAM);
+#  las variables propias de nginx ($uri, $host...) quedan intactas.
+# =====================================================================
+
+server_tokens off;
+
+# DNS interno de Docker. Con proxy_pass usando una variable, nginx resuelve
+# el backend en cada petición: el contenedor arranca aunque el backend
+# todavía no esté arriba (en vez de morir con "host not found").
+resolver 127.0.0.11 valid=30s ipv6=off;
+
+server {
+    listen 8080;
+    server_name _;
+
+    root /usr/share/nginx/html;
+    index index.html;
+
+    # IP real del cliente (viene de Caddy por la red interna de Docker)
+    set_real_ip_from 172.16.0.0/12;
+    set_real_ip_from 192.168.0.0/16;
+    set_real_ip_from 10.0.0.0/8;
+    real_ip_header X-Forwarded-For;
+    real_ip_recursive on;
+
+    gzip on;
+    gzip_vary on;
+    gzip_comp_level 6;
+    gzip_min_length 1024;
+    gzip_types
+        text/plain
+        text/css
+        application/javascript
+        application/json
+        application/manifest+json
+        image/svg+xml;
+
+    # -----------------------------------------------------------------
+    # Healthcheck para Docker
+    # -----------------------------------------------------------------
+    location = /healthz {
+        access_log off;
+        default_type text/plain;
+        return 200 "ok\n";
+    }
+
+    # -----------------------------------------------------------------
+    # API → backend (mismo origen que el frontend)
+    # Así se evitan: CORS, contenido mixto (HTTPS → HTTP) y que el
+    # service worker tenga que manejar respuestas de otro dominio.
+    # BACKEND_UPSTREAM = esquema + host (+ puerto), SIN ruta.
+    # La URI original (/api-employee-rust/v1/...) se envía tal cual.
+    # -----------------------------------------------------------------
+    location /api-employee-rust/ {
+        set $api_upstream ${BACKEND_UPSTREAM};
+        proxy_pass $api_upstream;
+
+        proxy_http_version 1.1;
+        proxy_set_header Connection "";
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $http_x_forwarded_proto;
+        proxy_set_header X-Forwarded-Host $host;
+        proxy_ssl_server_name on;
+
+        proxy_connect_timeout 5s;
+        proxy_read_timeout 60s;
+
+        # Subida de documentos, avatar y firmas
+        client_max_body_size 20m;
+    }
+
+    # -----------------------------------------------------------------
+    # 1) Service worker, registro y manifest: el navegador SIEMPRE debe
+    #    revalidarlos. Si se cachean, los usuarios no reciben versiones
+    #    nuevas de la app.
+    # -----------------------------------------------------------------
+    location ~ ^/(sw\.js|registerSW\.js|push-sw\.js|manifest\.webmanifest)$ {
+        include /etc/nginx/snippets/security-headers.conf;
+        add_header Cache-Control "no-cache, no-store, must-revalidate" always;
+        try_files $uri =404;
+    }
+
+    # -----------------------------------------------------------------
+    # 2) Archivos con hash en el nombre: nunca cambian → caché de 1 año.
+    #    Si no existen se responde 404 (NO index.html): devolver HTML en
+    #    lugar de JS provoca errores de MIME difíciles de diagnosticar.
+    # -----------------------------------------------------------------
+    location /assets/ {
+        include /etc/nginx/snippets/security-headers.conf;
+        add_header Cache-Control "public, max-age=31536000, immutable" always;
+        try_files $uri =404;
+    }
+
+    location ~ ^/workbox-[\w-]+\.js$ {
+        include /etc/nginx/snippets/security-headers.conf;
+        add_header Cache-Control "public, max-age=31536000, immutable" always;
+        try_files $uri =404;
+    }
+
+    # -----------------------------------------------------------------
+    # 3) index.html: siempre revalidar
+    # -----------------------------------------------------------------
+    location = /index.html {
+        include /etc/nginx/snippets/security-headers.conf;
+        add_header Cache-Control "no-cache" always;
+    }
+
+    # -----------------------------------------------------------------
+    # 4) SPA: cualquier ruta de React Router cae en index.html
+    # -----------------------------------------------------------------
+    location / {
+        include /etc/nginx/snippets/security-headers.conf;
+        add_header Cache-Control "no-cache" always;
+        try_files $uri $uri/ /index.html;
+    }
+}
