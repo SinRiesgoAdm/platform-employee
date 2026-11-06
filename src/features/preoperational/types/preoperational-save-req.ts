@@ -3,6 +3,8 @@ import type { PreoperationalStatus } from '@/features/preoperational/constants/s
 /** Pregunta contestada: `id` es el id del catálogo de preguntas. */
 export interface PreoperationalQuestionAnswer {
     id: number;
+    /** "CATEGORÍA - pregunta": se guarda en la novedad (incidents.issuers). */
+    name: string;
     quantity: number;
     response: PreoperationalStatus;
 }

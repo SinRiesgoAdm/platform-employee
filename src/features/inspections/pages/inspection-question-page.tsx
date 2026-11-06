@@ -86,6 +86,7 @@ export const InspectionQuestionPage = () => {
                 outService: formData.outService,
                 observations: formData.observations,
                 answers,
+                questions: questionInspection.data ?? [],
             });
 
             await saveInspectionQuestionAction(request);

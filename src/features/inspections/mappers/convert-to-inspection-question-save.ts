@@ -6,6 +6,7 @@ import type {
     AnswerItem,
     InspectionSaveRequest,
 } from '@/features/inspections/types/inspection-save-req.ts';
+import type { QuestionProgram } from '@/shared/components/questions/constants/questions.ts';
 
 export interface InspectionQuestionPayload {
     inspectionId: number;
@@ -14,6 +15,7 @@ export interface InspectionQuestionPayload {
     outService: string;
     observations: string;
     answers: AnswersMap;
+    questions: QuestionProgram[];
 }
 
 const TYPE_CHECK_CODES: Record<string, number> = {
@@ -44,6 +46,10 @@ const isQuestionId = (questionId: string) =>
 export const convertToInspectionQuestionSave = (
     payload: InspectionQuestionPayload,
 ): InspectionSaveRequest => {
+    const questionNames = new Map(
+        payload.questions.map((question) => [question.id, question.question]),
+    );
+
     const answers: AnswerItem[] = Object.entries(payload.answers)
         .filter(([questionId]) => isQuestionId(questionId))
         .map(([questionId, rawAnswer]) => {
@@ -56,6 +62,7 @@ export const convertToInspectionQuestionSave = (
 
             return {
                 idQuestion: Number(questionId),
+                questionName: questionNames.get(Number(questionId)) ?? '',
                 answer,
                 critical: answer === NON_COMPLIANT_ANSWER && isCritical ? 1 : 0,
             };

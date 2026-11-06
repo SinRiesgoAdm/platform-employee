@@ -1,5 +1,7 @@
 export interface AnswerItem {
     idQuestion: number;
+    /** Texto de la pregunta: se guarda en la novedad (incidents.issuers). */
+    questionName: string;
     answer: string;
     critical: number;
 }

@@ -27,6 +27,7 @@ export const convertToPreoperationalSave = ({
 
             questions.push({
                 id: item.id,
+                name: `${category.category} - ${item.label}`,
                 quantity: Number(state.quantity) || 0,
                 response: state.status,
             });
