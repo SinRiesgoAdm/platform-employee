@@ -1,4 +1,3 @@
-import { useTheme } from 'next-themes';
 import { Toaster as Sonner, type ToasterProps } from 'sonner';
 import {
     CircleCheckIcon,
@@ -9,11 +8,12 @@ import {
 } from 'lucide-react';
 
 const Toaster = ({ ...props }: ToasterProps) => {
-    const { theme = 'system' } = useTheme();
-
     return (
         <Sonner
-            theme={theme as ToasterProps['theme']}
+            // Toasts siempre oscuros, en cualquier dispositivo. Con 'system'
+            // dependían del tema del sistema y en teléfonos en modo claro
+            // salían pálidos (fondo casi blanco).
+            theme="dark"
             className="toaster group"
             icons={{
                 success: <CircleCheckIcon className="size-4" />,
