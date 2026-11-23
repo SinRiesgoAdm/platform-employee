@@ -23,7 +23,6 @@ export const QuestionsProgramsCards = memo(
 
         const isMultipleChoice = question.typeQuestion === 'multiple_choice';
 
-
         const answerOptions: [string, string][] = isMultipleChoice
             ? Object.entries(question.optionsMultiple ?? {})
             : question.options.map((option) => [option, option]);

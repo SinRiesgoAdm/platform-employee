@@ -4,7 +4,7 @@ export type OptionsMultiple = Record<string, string>;
 
 export interface QuestionProgram {
     id: number;
-    questionType?: QuestionType;
+    typeQuestion?: QuestionType;
     idQuestionShow?: number | null;
     session?: number | null;
     question: string;
