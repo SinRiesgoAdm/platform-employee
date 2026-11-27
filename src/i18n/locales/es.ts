@@ -11,6 +11,13 @@ export const titleEmployeeWelcomeLogin = 'Bienvenido de nuevo';
 export const titleEmployeeInitSessionLogin = 'Iniciar sesión';
 export const titleEmployeeStartDataLogin = 'Ingresa tus datos';
 export const titleEmployeeButtonStartLogin = 'Ingresar al portal';
+export const titleEmployeeButtonSearchingLogin = 'Buscando tus empresas...';
+export const titleEmployeeChooseEnterpriseLogin = 'Elige tu empresa';
+export const titleEmployeeChooseEnterpriseDescriptionLogin =
+    'Estás vinculado a varias empresas. Selecciona con cuál quieres ingresar.';
+export const titleEmployeeEnteringLogin = 'Ingresando...';
+export const titleEmployeeChangeUidLogin = 'Cambiar cédula';
+export const titleEmployeeUidRequiredLogin = 'Ingresa tu cédula.';
 export const titleEmployeeOfficeLogin = 'Oficinas corporativas de sinriesgo.co';
 export const titleEmployeePortalLogin = 'Portal de empleados';
 export const titleEmployeeAllLogin = 'Todo,';

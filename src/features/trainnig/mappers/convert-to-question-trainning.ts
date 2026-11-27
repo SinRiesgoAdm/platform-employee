@@ -5,11 +5,17 @@ export const convertToQuestionTrainning = (
     trainingId: number,
     answers: AnswersMap,
 ): TrainingQuestionRequest => {
+    console.log(answers);
     return {
         trainingId: trainingId,
         answersResponse: Object.entries(answers).map(([index, response]) => ({
             questionId: Number(index),
-            response: response === 'Verdadero' ? 'Si' : 'No',
+            response:
+                response === 'Verdadero'
+                    ? 'Si'
+                    : response === 'Falso'
+                      ? 'No'
+                      : response.toString(),
         })),
     };
 };

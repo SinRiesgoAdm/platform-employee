@@ -31,7 +31,7 @@ type AuthStore = {
     isAuthenticated: () => boolean;
 
     // actions
-    login: (nit: string) => Promise<boolean>;
+    login: (uid: string, enterpriseId: number) => Promise<boolean>;
     updateAvatar: (avatarUrl: string) => void;
     logout: () => void;
     updateName: (name: string) => void;
@@ -55,8 +55,8 @@ export const useAuthStore = create<AuthStore>()(
             isPevActive: () => get().user?.pev === 1,
             isAuthenticated: () => get().authStatus === 'authenticated',
 
-            login: async (nit: string) => {
-                const data = await loginAction(nit);
+            login: async (uid: string, enterpriseId: number) => {
+                const data = await loginAction(uid, enterpriseId);
 
                 set({
                     user: data,

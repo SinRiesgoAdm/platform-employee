@@ -18,7 +18,14 @@ interface Props {
 export const QuestionsProgramsCards = memo(
     ({ question, isDisabled }: Props) => {
         const { answers, responseQuestion } = useQuestionsPrograms();
+
         const selectedAnswer = answers[question.id];
+
+        const isMultipleChoice = question.typeQuestion === 'multiple_choice';
+
+        const answerOptions: [string, string][] = isMultipleChoice
+            ? Object.entries(question.optionsMultiple ?? {})
+            : question.options.map((option) => [option, option]);
 
         return (
             <Card className="border-border/70 shadow-sm">
@@ -29,37 +36,55 @@ export const QuestionsProgramsCards = memo(
                                 ? question.idQuestionShow
                                 : question.id}
                         </span>
+
                         <CardTitle className="pt-0.5 text-sm font-semibold leading-relaxed">
                             {question.question}
                         </CardTitle>
                     </div>
                 </CardHeader>
+
                 <CardContent className="p-4 pt-1 sm:p-5 sm:pt-2">
                     <div
-                        className="grid grid-cols-2 gap-2"
+                        className={`grid gap-2 ${
+                            isMultipleChoice ? 'grid-cols-1' : 'grid-cols-2'
+                        }`}
                         role="radiogroup"
                         aria-label={`Respuesta para la pregunta ${question.id}`}
                     >
-                        {question.options.map((option) => {
-                            const isSelected = selectedAnswer === option;
+                        {answerOptions.map(([key, option]) => {
+                            const answerValue = isMultipleChoice ? key : option;
+
+                            const isSelected = selectedAnswer === answerValue;
 
                             return (
                                 <Button
-                                    key={option}
+                                    key={key}
                                     type="button"
                                     variant={isSelected ? 'default' : 'outline'}
                                     role="radio"
                                     aria-checked={isSelected}
                                     onClick={() =>
-                                        responseQuestion(question.id, option)
+                                        responseQuestion(
+                                            question.id,
+                                            answerValue,
+                                        )
                                     }
                                     disabled={isDisabled}
-                                    className="h-auto min-h-10 whitespace-normal px-2 py-2.5 text-xs sm:text-sm gap-1.5"
+                                    className={`h-auto min-h-12 w-full whitespace-normal px-3 py-3 text-sm gap-2 ${
+                                        isMultipleChoice
+                                            ? 'justify-start text-left'
+                                            : 'justify-center text-center'
+                                    }`}
                                 >
-                                    {isSelected ? (
-                                        <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />
-                                    ) : null}
-                                    {option}
+                                    {isSelected && (
+                                        <CheckCircle2 className="h-4 w-4 shrink-0" />
+                                    )}
+
+                                    <span className="break-words">
+                                        {isMultipleChoice
+                                            ? `${key.toUpperCase()}. ${option}`
+                                            : option}
+                                    </span>
                                 </Button>
                             );
                         })}

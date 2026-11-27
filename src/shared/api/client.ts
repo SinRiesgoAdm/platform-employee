@@ -20,12 +20,16 @@ interface ApiErrorResponse {
 }
 
 const EXCLUDED_SUCCESS_ROUTES = [
+    '/auth/enterprises',
     '/auth/login',
     '/auth/refresh',
     '/auth/logout',
     '/notifications/devices', // [5]
     '/notifications/test', // [5]
 ];
+
+// Pasos del inicio de sesión: ni toast de éxito ni «Sesión Expirada»
+const AUTH_ROUTES = ['/auth/enterprises', '/auth/login'];
 
 const MUTATION_METHODS = ['POST', 'PUT', 'PATCH', 'DELETE'];
 
@@ -40,7 +44,9 @@ clientHttp.interceptors.request.use((config) => {
     const method = config.method?.toUpperCase() ?? 'GET';
 
     if (MUTATION_METHODS.includes(method) && !navigator.onLine) {
-        const isLoginRequest = config.url?.includes('/auth/login');
+        const isLoginRequest = AUTH_ROUTES.some((route) =>
+            config.url?.includes(route),
+        );
 
         notify.error(
             'Sin conexión',
@@ -92,7 +98,9 @@ clientHttp.interceptors.response.use(
             return Promise.reject(error);
         }
 
-        const isLoginRequest = error.config?.url?.includes('/auth/login');
+        const isLoginRequest = AUTH_ROUTES.some((route) =>
+            error.config?.url?.includes(route),
+        );
 
         if (error.response.status === 401 && !isLoginRequest) {
             // Ya no hay JWT para avisar al backend, pero sí se puede anular el
